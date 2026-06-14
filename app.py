@@ -1,6 +1,5 @@
 import streamlit as st
 import numpy as np
-import cv2
 from PIL import Image
 
 # Page config
@@ -31,7 +30,6 @@ in MRI scans using U-Net architecture.
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔗 Links")
 st.sidebar.markdown("[GitHub](https://github.com/sami442)")
-st.sidebar.markdown("[LinkedIn](https://linkedin.com/in/YOUR-LINKEDIN)")
 
 # Main content
 col1, col2 = st.columns(2)
@@ -49,35 +47,21 @@ if uploaded_file is not None:
     img_array = np.array(image)
 
     with col1:
-        st.image(image, caption="Uploaded MRI Scan", 
+        st.image(image, caption="Uploaded MRI Scan",
                 use_column_width=True)
-
-    # Preprocess
-    IMG_SIZE = 128
-    img_resized = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))
-    
-    # Handle grayscale images
-    if len(img_resized.shape) == 2:
-        img_resized = cv2.cvtColor(img_resized, cv2.COLOR_GRAY2RGB)
-    elif img_resized.shape[2] == 4:
-        img_resized = img_resized[:, :, :3]
-    
-    img_normalized = img_resized / 255.0
-    img_input = np.expand_dims(img_normalized, axis=0).astype(np.float32)
 
     with col2:
         st.markdown("### 🎯 Segmentation Result")
-        with st.spinner("Analyzing MRI scan... ⏳"):
-            st.info("""
-            ⚠️ **Demo Mode**
-            
-            To see real predictions, the trained 
-            model needs to be added to this repo.
-            
-            **Current Results on Test Set:**
-            - ✅ Accuracy: 99.37%
-            - ✅ Dice Score: 0.3147
-            """)
+        st.info("""
+        ⚠️ **Demo Mode**
+        
+        To see real predictions, the trained 
+        model needs to be added to this repo.
+        
+        **Current Results on Test Set:**
+        - ✅ Accuracy: 99.37%
+        - ✅ Dice Score: 0.3147
+        """)
 
 # Results section
 st.markdown("---")

@@ -1,2 +1,70 @@
-# Medical-image-segmentation
-Brain MRI tumor segmentation using U-net deep  learning architecture 
+# 🧠 Brain MRI Tumor Segmentation using U-Net
+
+![Python](https://img.shields.io/badge/Python-3.8+-blue)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen)
+
+## 📌 Overview
+A deep learning project that performs pixel-level segmentation of 
+brain tumors in MRI scans using the U-Net architecture. 
+This tool assists in early and accurate tumor detection, 
+supporting healthcare professionals in diagnosis.
+
+## 🎯 Objectives
+- Detect and segment tumor regions in brain MRI images
+- Achieve high accuracy using U-Net architecture
+- Visualize segmentation masks over original MRI scans
+
+## 🗂️ Dataset
+- **Source:** [LGG Brain MRI Segmentation - Kaggle](https://www.kaggle.com/datasets/mateuszbuda/lgg-mri-segmentation)
+- **Contents:** 110 patients, 3929 MRI images with tumor masks
+
+## 🧠 Model Architecture
+- **Base Model:** U-Net
+- **Encoder:** Contracting path with Conv2D + MaxPooling
+- **Decoder:** Expansive path with UpSampling + Skip Connections
+- **Loss Function:** Binary Crossentropy + Dice Loss
+- **Optimizer:** Adam
+
+## 📊 Results
+| Metric | Score |
+|--------|-------|
+| Accuracy | - |
+| IoU Score | - |
+| Dice Coefficient | - |
+
+*(Results will be updated after training)*
+
+## 🛠️ Technologies Used
+- Python 3.8+
+- TensorFlow / Keras
+- OpenCV
+- NumPy
+- Matplotlib
+- Scikit-learn
+
+## 🚀 How to Run
+1. Clone the repository
+```bash
+git clone https://github.com/YOUR-USERNAME/medical-image-segmentation.git
+```
+2. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+3. Open the notebook
+```bash
+jupyter notebook notebooks/unet_segmentation.ipynb
+```
+
+## 👩‍💻 Author
+**Samina Mazhar**
+- GitHub: [@YOUR-USERNAME](https://github.com/YOUR-USERNAME)
+- LinkedIn: [Your LinkedIn](https://linkedin.com/in/YOUR-PROFILE)
+
+## 📄 License
+This project is licensed under the MIT License.
+- **Format:** PNG images + corresponding binary masks
+
+## 🏗️ Project Structure

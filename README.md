@@ -37,10 +37,12 @@ supporting healthcare professionals in diagnosis.
 ## 📈 Results Visualization
 
 ### Training History
-![Training History](results/training_history_v2.png)
+![Training History](https://raw.githubusercontent.com/sami442/medical-image-segmentation/main/results/training_history_v2.png)
+
 
 ### Segmentation Predictions
-![Predictions](results/predictions_v2.png)
+![Predictions](https://raw.githubusercontent.com/sami442/medical-image-segmentation/main/results/predictions_v2.png)
+
 ## 🛠️ Technologies Used
 - Python 3.8+
 - TensorFlow / Keras

@@ -30,12 +30,17 @@ supporting healthcare professionals in diagnosis.
 ## 📊 Results
 | Metric | Score |
 |--------|-------|
-| Accuracy | - |
+| Accuracy | 99.37% |
 | IoU Score | - |
-| Dice Coefficient | - |
+| Dice Coefficient | 0.3147 |
 
-*(Results will be updated after training)*
+## 📈 Results Visualization
 
+### Training History
+![Training History](results/training_history_v2.png)
+
+### Segmentation Predictions
+![Predictions](results/predictions_v2.png)
 ## 🛠️ Technologies Used
 - Python 3.8+
 - TensorFlow / Keras

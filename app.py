@@ -1,6 +1,8 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
+import requests
+from io import BytesIO
 
 # Page config
 st.set_page_config(
@@ -31,34 +33,80 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔗 Links")
 st.sidebar.markdown("[GitHub](https://github.com/sami442)")
 
+# Sample Images
+GITHUB_RAW = "https://raw.githubusercontent.com/sami442/medical-image-segmentation/main/samples"
+
+sample_images = {
+    "Sample MRI 1": f"{GITHUB_RAW}/sample_1.png",
+    "Sample MRI 2": f"{GITHUB_RAW}/sample_2.png",
+    "Sample MRI 3": f"{GITHUB_RAW}/sample_3.png",
+}
+
 # Main content
+st.markdown("### 🖼️ Choose Input Method")
+input_method = st.radio(
+    "Select how to provide MRI scan:",
+    ["📂 Upload Your Own", "🔬 Use Sample Images"]
+)
+
 col1, col2 = st.columns(2)
 
-with col1:
-    st.markdown("### 📤 Upload MRI Scan")
-    uploaded_file = st.file_uploader(
-        "Choose an MRI image...",
-        type=['png', 'jpg', 'jpeg', 'tif']
-    )
+image = None
 
-if uploaded_file is not None:
-    # Load and display image
-    image = Image.open(uploaded_file)
-    img_array = np.array(image)
-
+if input_method == "📂 Upload Your Own":
     with col1:
-        st.image(image, caption="Uploaded MRI Scan",
+        st.markdown("### 📤 Upload MRI Scan")
+        uploaded_file = st.file_uploader(
+            "Choose an MRI image...",
+            type=['png', 'jpg', 'jpeg', 'tif']
+        )
+        if uploaded_file is not None:
+            image = Image.open(uploaded_file)
+
+else:
+    with col1:
+        st.markdown("### 🔬 Select Sample Image")
+        selected_sample = st.selectbox(
+            "Choose a sample MRI:",
+            list(sample_images.keys())
+        )
+        try:
+            response = requests.get(sample_images[selected_sample])
+            image = Image.open(BytesIO(response.content))
+            st.success(f"✅ {selected_sample} loaded!")
+        except:
+            st.error("❌ Could not load sample image")
+
+# Display image and results
+if image is not None:
+    with col1:
+        st.markdown("### 🧠 MRI Scan")
+        st.image(image, caption="Input MRI Scan",
                 use_column_width=True)
 
     with col2:
-        st.markdown("### 🎯 Segmentation Result")
+        st.markdown("### 🎯 Analysis Result")
+        
+        # Convert to grayscale for analysis
+        img_array = np.array(image.convert('L'))
+        
+        # Simple thresholding to simulate segmentation
+        threshold = img_array.mean() + img_array.std()
+        mask = (img_array > threshold).astype(np.uint8) * 255
+        
+        # Display mask
+        st.image(mask, caption="Detected Region",
+                use_column_width=True, clamp=True)
+        
+        # Stats
+        tumor_percent = (mask > 0).mean() * 100
+        st.markdown("### 📊 Analysis Stats")
+        st.metric("Detected Region", f"{tumor_percent:.2f}%")
         st.info("""
-        ⚠️ **Demo Mode**
+        ⚠️ **Note:** This is a visualization demo.
+        Real predictions require the full trained model.
         
-        To see real predictions, the trained 
-        model needs to be added to this repo.
-        
-        **Current Results on Test Set:**
+        **Actual Model Performance:**
         - ✅ Accuracy: 99.37%
         - ✅ Dice Score: 0.3147
         """)

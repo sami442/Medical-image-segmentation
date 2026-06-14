@@ -47,7 +47,7 @@ supporting healthcare professionals in diagnosis.
 ## 🚀 How to Run
 1. Clone the repository
 ```bash
-git clone https://github.com/YOUR-USERNAME/medical-image-segmentation.git
+git clone https://github.com/sami442/medical-image-segmentation.git
 ```
 2. Install dependencies
 ```bash
@@ -60,8 +60,7 @@ jupyter notebook notebooks/unet_segmentation.ipynb
 
 ## 👩‍💻 Author
 **Samina Mazhar**
-- GitHub: [@YOUR-USERNAME](https://github.com/YOUR-USERNAME)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/YOUR-PROFILE)
+ - GitHub: [@sami442](https://github.com/sami442)
 
 ## 📄 License
 This project is licensed under the MIT License.

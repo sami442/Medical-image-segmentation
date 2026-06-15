@@ -3,7 +3,6 @@ import numpy as np
 from PIL import Image
 import requests
 from io import BytesIO
-from huggingface_hub import hf_hub_download
 
 # Page config
 st.set_page_config(
@@ -38,22 +37,22 @@ st.sidebar.markdown("[Hugging Face](https://huggingface.co/mazharsamina26)")
 @st.cache_resource
 def load_model():
     with st.spinner("Loading AI model... ⏳"):
-        import tflite_runtime.interpreter as tflite
-        model_path = hf_hub_download(
-            repo_id="mazharsamina26/brain-mri-segmentation",
-            filename="model.tflite"
-        )
-        interpreter = tflite.Interpreter(model_path=model_path)
-        interpreter.allocate_tensors()
-        return interpreter
+        try:
+            import tflite_runtime.interpreter as tflite
+            interpreter = tflite.Interpreter(
+                model_path="brain_mri_model.tflite")
+            interpreter.allocate_tensors()
+            return interpreter, True
+        except Exception as e:
+            st.warning(f"Demo mode: {str(e)}")
+            return None, False
 
-try:
-    interpreter = load_model()
+interpreter, model_loaded = load_model()
+
+if model_loaded:
     st.sidebar.success("✅ Model loaded!")
-    model_loaded = True
-except:
-    st.sidebar.warning("⚠️ Using demo mode")
-    model_loaded = False
+else:
+    st.sidebar.warning("⚠️ Demo mode")
 
 # Sample Images
 GITHUB_RAW = "https://raw.githubusercontent.com/sami442/medical-image-segmentation/main/samples"
@@ -117,11 +116,9 @@ if image is not None:
             img_input = np.expand_dims(img_normalized, axis=0)
 
             if model_loaded:
-                # Get input/output details
+                # Real prediction
                 input_details = interpreter.get_input_details()
                 output_details = interpreter.get_output_details()
-
-                # Run inference
                 interpreter.set_tensor(
                     input_details[0]['index'], img_input)
                 interpreter.invoke()
@@ -131,26 +128,24 @@ if image is not None:
                        ).astype(np.uint8) * 255
             else:
                 # Demo mode
-                img_gray = np.array(image.convert('L').resize(
-                    (IMG_SIZE, IMG_SIZE)))
+                img_gray = np.array(
+                    image.convert('L').resize((IMG_SIZE, IMG_SIZE)))
                 threshold = img_gray.mean() + img_gray.std()
-                mask = (img_gray > threshold).astype(
-                    np.uint8) * 255
+                mask = (img_gray > threshold
+                       ).astype(np.uint8) * 255
 
-            # Display mask
+            # Display
             st.image(mask, caption="Predicted Tumor Mask",
                     use_container_width=True, clamp=True)
 
             # Stats
             tumor_percent = (mask > 0).mean() * 100
-
             if tumor_percent > 1:
                 st.error(
                     f"⚠️ Tumor Detected: {tumor_percent:.2f}%")
             else:
                 st.success(
                     f"✅ No Tumor Detected: {tumor_percent:.2f}%")
-
             st.metric("Tumor Region", f"{tumor_percent:.2f}%")
 
 # Performance
@@ -184,4 +179,4 @@ with col7:
     )
 
 st.markdown("---")
-st.markdown("**Developed by Samina Mazhar** | Artificial Intelligence")
+st.markdown("**Developed by Samina Mazhar** | BS Artificial Intelligence")

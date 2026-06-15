@@ -1,4 +1,15 @@
 # 🧠 Brain MRI Tumor Segmentation using U-Net
+# 🧠 Brain MRI Tumor Segmentation using U-Net
+
+![Python](https://img.shields.io/badge/Python-3.8+-blue)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen)
+[![Hugging Face](https://img.shields.io/badge/🤗-Hugging%20Face-yellow)](https://huggingface.co/mazharsamina26)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://medical-image-segmentation-jc6hrzsdhjimse9d47n5uz.streamlit.app/)
+
+## 🚀 Live Demo
+...
 ## 🚀 Live Demo
 👉 [**Try the App Here**](https://medical-image-segmentation-jc6hrzsdhjimse9d47n5uz.streamlit.app/)
 
@@ -17,14 +28,7 @@
 - 📊 Live performance metrics
 - 🎨 Professional dark UI design
 - 🏥 Medical disclaimer included
-
-![Python](https://img.shields.io/badge/Python-3.8+-blue)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Status](https://img.shields.io/badge/Status-Active-brightgreen)
-[![Hugging Face](https://img.shields.io/badge/🤗-Hugging%20Face-yellow)](https://huggingface.co/mazharsamina26)
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://medical-image-segmentation-jc6hrzsdhjimse9d47n5uz.streamlit.app/)
-
+- 
 ## 📌 Overview
 A deep learning project that performs pixel-level segmentation of 
 brain tumors in MRI scans using the U-Net architecture. 

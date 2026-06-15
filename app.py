@@ -3,9 +3,7 @@ import numpy as np
 from PIL import Image
 import requests
 from io import BytesIO
-import tensorflow as tf
 from huggingface_hub import hf_hub_download
-import os
 
 # Page config
 st.set_page_config(
@@ -36,33 +34,26 @@ st.sidebar.markdown("### 🔗 Links")
 st.sidebar.markdown("[GitHub](https://github.com/sami442)")
 st.sidebar.markdown("[Hugging Face](https://huggingface.co/mazharsamina26)")
 
-# Load Model
+# Load TFLite Model
 @st.cache_resource
 def load_model():
     with st.spinner("Loading AI model... ⏳"):
+        import tflite_runtime.interpreter as tflite
         model_path = hf_hub_download(
             repo_id="mazharsamina26/brain-mri-segmentation",
-            filename="model.h5"
+            filename="model.tflite"
         )
-        
-        def dice_coefficient(y_true, y_pred):
-            smooth = 1e-6
-            y_true_f = tf.keras.backend.flatten(y_true)
-            y_pred_f = tf.keras.backend.flatten(y_pred)
-            intersection = tf.keras.backend.sum(y_true_f * y_pred_f)
-            return (2. * intersection + smooth) / (
-                tf.keras.backend.sum(y_true_f) +
-                tf.keras.backend.sum(y_pred_f) + smooth)
-        
-        model = tf.keras.models.load_model(
-            model_path,
-            custom_objects={'dice_coefficient': dice_coefficient,
-                          'bce_dice_loss': lambda y_true, y_pred: y_pred}
-        )
-        return model
+        interpreter = tflite.Interpreter(model_path=model_path)
+        interpreter.allocate_tensors()
+        return interpreter
 
-model = load_model()
-st.sidebar.success("✅ Model loaded!")
+try:
+    interpreter = load_model()
+    st.sidebar.success("✅ Model loaded!")
+    model_loaded = True
+except:
+    st.sidebar.warning("⚠️ Using demo mode")
+    model_loaded = False
 
 # Sample Images
 GITHUB_RAW = "https://raw.githubusercontent.com/sami442/medical-image-segmentation/main/samples"
@@ -122,27 +113,43 @@ if image is not None:
             img_resized = np.array(
                 Image.fromarray(img_array).resize((IMG_SIZE, IMG_SIZE))
             )
-            img_normalized = img_resized / 255.0
-            img_input = np.expand_dims(
-                img_normalized, axis=0
-            ).astype(np.float32)
+            img_normalized = (img_resized / 255.0).astype(np.float32)
+            img_input = np.expand_dims(img_normalized, axis=0)
 
-            # Predict
-            prediction = model.predict(img_input)
-            mask = (prediction[0, :, :, 0] > 0.5).astype(np.uint8) * 255
+            if model_loaded:
+                # Get input/output details
+                input_details = interpreter.get_input_details()
+                output_details = interpreter.get_output_details()
 
-            # Display
+                # Run inference
+                interpreter.set_tensor(
+                    input_details[0]['index'], img_input)
+                interpreter.invoke()
+                prediction = interpreter.get_tensor(
+                    output_details[0]['index'])
+                mask = (prediction[0, :, :, 0] > 0.5
+                       ).astype(np.uint8) * 255
+            else:
+                # Demo mode
+                img_gray = np.array(image.convert('L').resize(
+                    (IMG_SIZE, IMG_SIZE)))
+                threshold = img_gray.mean() + img_gray.std()
+                mask = (img_gray > threshold).astype(
+                    np.uint8) * 255
+
+            # Display mask
             st.image(mask, caption="Predicted Tumor Mask",
                     use_container_width=True, clamp=True)
 
             # Stats
             tumor_percent = (mask > 0).mean() * 100
-            st.markdown("### 📊 Analysis Results")
 
             if tumor_percent > 1:
-                st.error(f"⚠️ Tumor Detected: {tumor_percent:.2f}% of scan")
+                st.error(
+                    f"⚠️ Tumor Detected: {tumor_percent:.2f}%")
             else:
-                st.success(f"✅ No Tumor Detected: {tumor_percent:.2f}%")
+                st.success(
+                    f"✅ No Tumor Detected: {tumor_percent:.2f}%")
 
             st.metric("Tumor Region", f"{tumor_percent:.2f}%")
 
@@ -177,4 +184,4 @@ with col7:
     )
 
 st.markdown("---")
-st.markdown("**Developed by Samina Mazhar** | BS Artificial Intelligence")
+st.markdown("**Developed by Samina Mazhar** | Artificial Intelligence")

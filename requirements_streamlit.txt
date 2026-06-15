@@ -2,3 +2,5 @@ streamlit
 numpy
 Pillow
 requests
+tensorflow-cpu
+huggingface_hub

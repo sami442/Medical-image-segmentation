@@ -2,5 +2,6 @@ streamlit
 numpy
 Pillow
 requests
-tensorflow-cpu
 huggingface_hub
+tf-keras
+tensorflow-cpu==2.15.0

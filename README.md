@@ -3,7 +3,13 @@
 👉 [**Try the App Here**](https://medical-image-segmentation-jc6hrzsdhjimse9d47n5uz.streamlit.app/)
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://medical-image-segmentation-jc6hrzsdhjimse9d47n5uz.streamlit.app/)
+## 📸 App Screenshots
 
+### 🏠 Home Page
+![Home Page](https://raw.githubusercontent.com/sami442/medical-image-segmentation/main/Results/screenshot_home.png)
+
+### 🎯 Tumor Detection Result
+![Prediction](https://raw.githubusercontent.com/sami442/medical-image-segmentation/main/Results/screenshot_prediction.png)
 ## ✨ App Features
 - 🧠 Real-time brain tumor segmentation
 - 📤 Upload your own MRI scans

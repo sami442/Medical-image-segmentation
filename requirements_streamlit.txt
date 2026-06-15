@@ -3,5 +3,4 @@ numpy
 Pillow
 requests
 huggingface_hub
-tf-keras
-tensorflow-cpu==2.15.0
+tflite-runtime

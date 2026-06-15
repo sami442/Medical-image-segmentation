@@ -4,6 +4,14 @@
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://medical-image-segmentation-jc6hrzsdhjimse9d47n5uz.streamlit.app/)
 
+## ✨ App Features
+- 🧠 Real-time brain tumor segmentation
+- 📤 Upload your own MRI scans
+- 🔬 Built-in sample MRI images
+- 📊 Live performance metrics
+- 🎨 Professional dark UI design
+- 🏥 Medical disclaimer included
+
 ![Python](https://img.shields.io/badge/Python-3.8+-blue)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)

@@ -1,6 +1,8 @@
 # 🧠 Brain MRI Tumor Segmentation using U-Net
 ## 🚀 Live Demo
-👉 [Try the App Here](https://medical-image-segmentation-jc6hrzsdhjimse9d47n5uz.streamlit.app/)
+👉 [**Try the App Here**](https://medical-image-segmentation-jc6hrzsdhjimse9d47n5uz.streamlit.app/)
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://medical-image-segmentation-jc6hrzsdhjimse9d47n5uz.streamlit.app/)
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange)

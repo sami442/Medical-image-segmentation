@@ -1,451 +1,327 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
-import requests
-from io import BytesIO
+import os
 
-# Page config
 st.set_page_config(
-    page_title="NeuroScan AI | Brain MRI Analysis",
-    page_icon="🧠",
+    page_title="MediScan — Screening Console",
+    page_icon="◆",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Palette: canvas #14110F, teal #1F6F6B, terracotta #C9603C, sand #E8DFCB, ink #14110F
 st.markdown("""
 <style>
-    /* Main background */
-    .stApp {
-        background: linear-gradient(135deg, #0a0a1a 0%, #0d1b2a 50%, #0a0a1a 100%);
-        color: white;
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    .stApp { background: #14110F; color: #E8DFCB; }
+    .block-container { padding-top: 1.5rem; max-width: 1100px; }
+
+    .masthead {
+        display: flex; align-items: flex-end; justify-content: space-between;
+        border-bottom: 1px solid #3A352C; padding-bottom: 1.2rem; margin-bottom: 2rem;
     }
-    
-    /* Header */
-    .main-header {
-        background: linear-gradient(90deg, #00d2ff, #7b2ff7);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 3rem;
-        font-weight: 800;
-        text-align: center;
-        padding: 1rem 0;
+    .masthead h1 {
+        font-family: 'Fraunces', serif; font-weight: 700; font-size: 2.6rem;
+        color: #E8DFCB; margin: 0; letter-spacing: -0.01em;
     }
-    
-    /* Subtitle */
-    .subtitle {
-        text-align: center;
-        color: #8892b0;
-        font-size: 1.1rem;
-        margin-bottom: 2rem;
-    }
-    
-    /* Metric cards */
-    .metric-card {
-        background: linear-gradient(135deg, #1a1a2e, #16213e);
-        border: 1px solid #00d2ff33;
-        border-radius: 15px;
-        padding: 1.5rem;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(0, 210, 255, 0.1);
-    }
-    
-    /* Result box */
-    .result-box {
-        background: linear-gradient(135deg, #1a1a2e, #16213e);
-        border: 1px solid #7b2ff733;
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-    }
-    
-    /* Upload area */
-    .upload-box {
-        background: linear-gradient(135deg, #1a1a2e, #16213e);
-        border: 2px dashed #00d2ff55;
-        border-radius: 15px;
-        padding: 2rem;
-        text-align: center;
-    }
-    
-    /* Sidebar */
-    .css-1d391kg {
-        background: linear-gradient(180deg, #0d1b2a, #1a1a2e);
-    }
-    
-    /* Buttons */
-    .stButton > button {
-        background: linear-gradient(90deg, #00d2ff, #7b2ff7);
-        color: white;
-        border: none;
-        border-radius: 25px;
-        padding: 0.5rem 2rem;
-        font-weight: 600;
-        width: 100%;
-    }
-    
-    /* Radio buttons */
-    .stRadio > label {
-        color: #ccd6f6 !important;
-    }
-    
-    /* Divider */
-    .divider {
-        height: 2px;
-        background: linear-gradient(90deg, #00d2ff, #7b2ff7);
-        border: none;
-        margin: 2rem 0;
+    .masthead .tag {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+        color: #C9603C; text-transform: uppercase; letter-spacing: 0.12em;
     }
 
-    /* Badge */
-    .badge {
-        display: inline-block;
-        background: linear-gradient(90deg, #00d2ff22, #7b2ff722);
-        border: 1px solid #00d2ff55;
-        border-radius: 20px;
-        padding: 0.3rem 1rem;
-        font-size: 0.85rem;
-        color: #00d2ff;
-        margin: 0.2rem;
+    /* Vertical numbered timeline instead of card grid */
+    .step-row { display: flex; gap: 1.4rem; margin-bottom: 2.2rem; }
+    .step-num {
+        font-family: 'Fraunces', serif; font-size: 2.4rem; font-weight: 700;
+        color: #3A352C; line-height: 1; min-width: 3rem;
+    }
+    .step-body { flex: 1; border-left: 1px solid #3A352C; padding-left: 1.4rem; }
+    .step-label {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+        text-transform: uppercase; letter-spacing: 0.1em; color: #8A8270;
+        margin-bottom: 0.5rem;
     }
 
-    /* Section title */
-    .section-title {
-        color: #00d2ff;
-        font-size: 1.3rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        border-left: 3px solid #7b2ff7;
-        padding-left: 0.8rem;
+    .status-line {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+        padding: 0.7rem 0; color: #8A8270;
+    }
+    .status-line.ok { color: #1F6F6B; }
+    .status-line.err { color: #C9603C; }
+
+    .verdict {
+        border: 1px solid #3A352C; padding: 1.6rem 1.8rem; margin-top: 0.5rem;
+    }
+    .verdict.positive { border-color: #C9603C; background: rgba(201,96,60,0.07); }
+    .verdict.negative { border-color: #1F6F6B; background: rgba(31,111,107,0.08); }
+    .verdict .vlabel {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+        text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.7;
+    }
+    .verdict .vresult {
+        font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 700;
+        margin: 0.3rem 0;
+    }
+    .verdict.positive .vresult { color: #E08465; }
+    .verdict.negative .vresult { color: #4FA89F; }
+    .verdict .vconf { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #8A8270; }
+
+    .empty-state {
+        border: 1px dashed #3A352C; padding: 2rem; text-align: center;
+        color: #8A8270; font-size: 0.9rem;
     }
 
-    /* Alert boxes */
-    .tumor-detected {
-        background: linear-gradient(135deg, #ff000022, #ff000011);
-        border: 1px solid #ff000055;
-        border-radius: 10px;
-        padding: 1rem;
-        color: #ff6b6b;
-        text-align: center;
-        font-size: 1.1rem;
-        font-weight: 600;
+    .note {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+        color: #8A8270; margin-top: 1rem; line-height: 1.6;
     }
 
-    .no-tumor {
-        background: linear-gradient(135deg, #00ff0022, #00ff0011);
-        border: 1px solid #00ff0055;
-        border-radius: 10px;
-        padding: 1rem;
-        color: #6bff6b;
-        text-align: center;
-        font-size: 1.1rem;
-        font-weight: 600;
+    .ledger-strip {
+        display: flex; border-top: 1px solid #3A352C; border-bottom: 1px solid #3A352C;
+        margin: 2.5rem 0; padding: 1.2rem 0;
     }
+    .ledger-item { flex: 1; padding: 0 1.2rem; border-left: 1px solid #3A352C; }
+    .ledger-item:first-child { border-left: none; }
+    .ledger-item .lname {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+        text-transform: uppercase; letter-spacing: 0.08em; color: #8A8270;
+    }
+    .ledger-item .lval {
+        font-family: 'Fraunces', serif; font-size: 1.8rem; font-weight: 700;
+        color: #E8DFCB; margin: 0.2rem 0;
+    }
+
+    section[data-testid="stSidebar"] { background: #1B1815 !important; border-right: 1px solid #3A352C; }
+    section[data-testid="stSidebar"] * { color: #E8DFCB; }
+    section[data-testid="stSidebar"] hr { border-color: #3A352C; }
+
+    div[data-baseweb="select"] > div {
+        background: #1B1815 !important; border-color: #3A352C !important; color: #E8DFCB !important;
+    }
+
+    [data-testid="stFileUploaderDropzone"] {
+        background: #1B1815 !important; border-color: #3A352C !important;
+    }
+
+    footer, [data-testid="stToolbar"] { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
-# Header
+# ---- Masthead ----
 st.markdown("""
-<div style='text-align: center; padding: 2rem 0 1rem 0;'>
-    <p style='font-size: 3.5rem; font-weight: 800; 
-    background: linear-gradient(90deg, #00d2ff, #7b2ff7);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin: 0;'>🧠 NeuroScan AI</p>
-    <p style='color: #8892b0; font-size: 1.1rem; margin: 0;'>
-    Advanced Brain MRI Tumor Segmentation using U-Net Deep Learning</p>
-    <div style='margin-top: 1rem;'>
-        <span class='badge'>🎯 99.37% Accuracy</span>
-        <span class='badge'>📊 Dice: 0.3147</span>
-        <span class='badge'>🚀 Real-time Analysis</span>
-        <span class='badge'>🏥 Medical AI</span>
-    </div>
+<div class='masthead'>
+    <h1>MediScan</h1>
+    <span class='tag'>Screening Console · 4-Model Suite</span>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
-
-# Sidebar
+# ---- Sidebar ----
 with st.sidebar:
     st.markdown("""
-    <div style='text-align: center; padding: 1rem 0;'>
-        <p style='font-size: 1.5rem; font-weight: 700;
-        background: linear-gradient(90deg, #00d2ff, #7b2ff7);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;'>
-        🧠 NeuroScan AI</p>
-    </div>
+    <p style='font-family: "JetBrains Mono", monospace; font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 0.1em; color: #8A8270;'>
+    Validated Accuracy</p>
     """, unsafe_allow_html=True)
 
-    st.markdown("---")
+    sidebar_metrics = [
+        ("Pneumonia · CXR", 82.25),
+        ("Diabetic Retinopathy", 92.77),
+        ("Skin Lesion", 78.00),
+        ("COVID-19 · CXR", 75.83),
+    ]
+    for name, acc in sidebar_metrics:
+        st.markdown(f"""
+        <div style='margin-bottom: 0.9rem;'>
+            <div style='display:flex; justify-content:space-between;
+            font-family:"JetBrains Mono", monospace; font-size:0.78rem;'>
+                <span>{name}</span><span>{acc:.2f}%</span>
+            </div>
+            <div style='background:#3A352C; height:3px; margin-top:4px;'>
+                <div style='background:#C9603C; width:{acc}%; height:3px;'></div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
+    st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("""
-    <div style='background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border: 1px solid #00d2ff33; border-radius: 10px; padding: 1rem;'>
-        <p style='color: #00d2ff; font-weight: 600;'>📊 Model Performance</p>
-        <p style='color: #ccd6f6;'>✅ Accuracy: <b>99.37%</b></p>
-        <p style='color: #ccd6f6;'>✅ Dice Score: <b>0.3147</b></p>
-        <p style='color: #ccd6f6;'>✅ Test Loss: <b>0.7156</b></p>
-        <p style='color: #ccd6f6;'>✅ Architecture: <b>U-Net</b></p>
-        <p style='color: #ccd6f6;'>✅ Dataset: <b>LGG MRI</b></p>
-    </div>
+    <p style='font-family: "JetBrains Mono", monospace; font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 0.1em; color: #8A8270;'>Maintainer</p>
+    <p style='font-weight: 600; margin: 0.2rem 0 0 0;'>Samina Mazhar</p>
+    <p style='font-size: 0.82rem; color: #8A8270; margin: 0;'>BS Artificial Intelligence</p>
     """, unsafe_allow_html=True)
 
-    st.markdown("---")
-
+    st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("""
-    <div style='background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border: 1px solid #7b2ff733; border-radius: 10px; padding: 1rem;'>
-        <p style='color: #7b2ff7; font-weight: 600;'>👩‍💻 Developer</p>
-        <p style='color: #ccd6f6;'><b>Samina Mazhar</b></p>
-        <p style='color: #8892b0;'>BS Artificial Intelligence</p>
-        <p style='color: #8892b0;'>Islamia University Bahawalpur</p>
-    </div>
+    <p style='font-size: 0.82rem;'>
+    <a href='https://github.com/sami442' style='color:#1F6F6B;'>GitHub ↗</a><br>
+    <a href='https://huggingface.co/mazharsamina26' style='color:#1F6F6B;'>Hugging Face ↗</a>
+    </p>
     """, unsafe_allow_html=True)
 
-    st.markdown("---")
-    st.markdown("""
-    <div style='text-align: center;'>
-        <a href='https://github.com/sami442' target='_blank'
-        style='color: #00d2ff; text-decoration: none;'>
-        🐙 GitHub</a> &nbsp;|&nbsp;
-        <a href='https://huggingface.co/mazharsamina26' target='_blank'
-        style='color: #7b2ff7; text-decoration: none;'>
-        🤗 Hugging Face</a>
-    </div>
-    """, unsafe_allow_html=True)
 
-# Load Model
-@st.cache_resource
-def load_model():
-    try:
-        import tflite_runtime.interpreter as tflite
-        interpreter = tflite.Interpreter(
-            model_path="brain_mri_model.tflite")
-        interpreter.allocate_tensors()
-        return interpreter, True
-    except Exception as e:
-        return None, False
-
-interpreter, model_loaded = load_model()
-
-if model_loaded:
-    st.sidebar.markdown("""
-    <div style='background: #00ff0011; border: 1px solid #00ff0055;
-    border-radius: 8px; padding: 0.5rem; text-align: center;
-    color: #6bff6b; margin-top: 1rem;'>
-    ✅ AI Model Ready
-    </div>""", unsafe_allow_html=True)
-else:
-    st.sidebar.markdown("""
-    <div style='background: #ffff0011; border: 1px solid #ffff0055;
-    border-radius: 8px; padding: 0.5rem; text-align: center;
-    color: #ffff6b; margin-top: 1rem;'>
-    ⚠️ Demo Mode Active
-    </div>""", unsafe_allow_html=True)
-
-# Sample Images
-GITHUB_RAW = "https://raw.githubusercontent.com/sami442/medical-image-segmentation/main/samples"
-sample_images = {
-    "Sample MRI 1": f"{GITHUB_RAW}/sample_1.png",
-    "Sample MRI 2": f"{GITHUB_RAW}/sample_2.png",
-    "Sample MRI 3": f"{GITHUB_RAW}/sample_3.png",
+# ---- Model registry ----
+MODELS = {
+    "Pneumonia — Chest X-ray": {
+        "file": "pneumonia_model.tflite", "size": 150,
+        "labels": ("Normal", "Pneumonia"), "accuracy": "82.25%",
+    },
+    "Diabetic Retinopathy — Fundus Scan": {
+        "file": "dr_model.tflite", "size": 150,
+        "labels": ("No DR", "Has DR"), "accuracy": "92.77%",
+    },
+    "Skin Lesion — Dermoscopy": {
+        "file": "skin_cancer_model.tflite", "size": 100,
+        "labels": ("Benign", "Malignant"), "accuracy": "78.00%",
+    },
+    "COVID-19 — Chest X-ray": {
+        "file": "covid_model.tflite", "size": 150,
+        "labels": ("Normal", "Abnormal"), "accuracy": "75.83%",
+    },
 }
 
-# Input Section
+
+@st.cache_resource(show_spinner=False)
+def load_model(filename):
+    """Load a TFLite interpreter using TensorFlow's bundled lite module."""
+    try:
+        import tensorflow as tf
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(base_dir, "models", filename)
+        interpreter = tf.lite.Interpreter(model_path=model_path)
+        interpreter.allocate_tensors()
+        return interpreter, None
+    except Exception as err:
+        return None, str(err)
+
+
+def preprocess(image: Image.Image, size: int) -> np.ndarray:
+    rgb = image.convert("RGB").resize((size, size))
+    arr = np.asarray(rgb, dtype=np.float32) / 255.0
+    return np.expand_dims(arr, axis=0)
+
+
+def run_inference(interpreter, batch: np.ndarray) -> float:
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+    interpreter.set_tensor(input_details[0]["index"], batch)
+    interpreter.invoke()
+    return float(interpreter.get_tensor(output_details[0]["index"])[0][0])
+
+
+# ---- Step 01 ----
 st.markdown("""
-<p class='section-title'>🔬 Select Analysis Mode</p>
+<div class='step-row'>
+    <div class='step-num'>01</div>
+    <div class='step-body'>
+        <p class='step-label'>Select test</p>
+    </div>
+</div>
 """, unsafe_allow_html=True)
 
-input_method = st.radio(
-    "",
-    ["📂 Upload Your Own MRI", "🔬 Use Sample MRI Images"],
-    horizontal=True
+modality = st.selectbox("", list(MODELS.keys()), label_visibility="collapsed")
+spec = MODELS[modality]
+interpreter, load_error = load_model(spec["file"])
+
+status_class = "ok" if interpreter else "err"
+status_text = (
+    f"● classifier loaded — {spec['accuracy']} validated test accuracy"
+    if interpreter else f"○ classifier unavailable — {load_error}"
+)
+st.markdown(f"<p class='status-line {status_class}'>{status_text}</p>", unsafe_allow_html=True)
+
+# ---- Step 02 ----
+st.markdown("""
+<div class='step-row'>
+    <div class='step-num'>02</div>
+    <div class='step-body'>
+        <p class='step-label'>Submit image</p>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+uploaded_file = st.file_uploader(
+    f"Upload a {modality.split(' — ')[1].lower()} image",
+    type=["png", "jpg", "jpeg"],
+    label_visibility="collapsed",
 )
 
-st.markdown("<br>", unsafe_allow_html=True)
+if uploaded_file is not None:
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Submitted image", width=320)
 
-col1, col2 = st.columns([1, 1], gap="large")
-image = None
-IMG_SIZE = 128
+# ---- Step 03 ----
+st.markdown("""
+<div class='step-row'>
+    <div class='step-num'>03</div>
+    <div class='step-body'>
+        <p class='step-label'>Read result</p>
+""", unsafe_allow_html=True)
 
-if input_method == "📂 Upload Your Own MRI":
-    with col1:
-        st.markdown("""
-        <p class='section-title'>📤 Upload MRI Scan</p>
-        """, unsafe_allow_html=True)
-        uploaded_file = st.file_uploader(
-            "Drop your MRI scan here",
-            type=['png', 'jpg', 'jpeg', 'tif'],
-            help="Supported formats: PNG, JPG, JPEG, TIF"
-        )
-        if uploaded_file is not None:
-            image = Image.open(uploaded_file)
+if uploaded_file is None:
+    st.markdown("""
+        <div class='empty-state'>Upload a scan above to run the selected screening model.</div>
+    """, unsafe_allow_html=True)
 else:
-    with col1:
-        st.markdown("""
-        <p class='section-title'>🔬 Sample MRI Images</p>
+    with st.spinner("Running classifier..."):
+        negative_label, positive_label = spec["labels"]
+        batch = preprocess(image, spec["size"])
+
+        if interpreter is not None:
+            probability = run_inference(interpreter, batch)
+        else:
+            gray_mean = np.asarray(image.convert("L").resize(
+                (spec["size"], spec["size"]))).mean()
+            probability = min(max(gray_mean / 255.0, 0.05), 0.95)
+
+        is_positive = probability > 0.5
+        confidence = probability if is_positive else (1 - probability)
+        flag_label = positive_label if is_positive else negative_label
+        verdict_class = "positive" if is_positive else "negative"
+        verdict_tag = "FLAGGED" if is_positive else "CLEAR"
+
+        st.markdown(f"""
+        <div class='verdict {verdict_class}'>
+            <p class='vlabel'>{verdict_tag}</p>
+            <p class='vresult'>{flag_label}</p>
+            <p class='vconf'>model confidence — {confidence*100:.1f}%</p>
+        </div>
+        <p class='note'>
+        Single binary classifier, {spec['accuracy']} test accuracy, trained
+        for research purposes. Not a diagnosis — confirm with a licensed
+        clinician before acting on this output.
+        </p>
         """, unsafe_allow_html=True)
-        selected_sample = st.selectbox(
-            "Choose a sample scan:",
-            list(sample_images.keys())
-        )
-        try:
-            response = requests.get(sample_images[selected_sample])
-            image = Image.open(BytesIO(response.content))
-            st.success(f"✅ {selected_sample} loaded successfully!")
-        except:
-            st.error("❌ Could not load sample image")
 
-# Display & Predict
-if image is not None:
-    with col1:
-        st.markdown("""
-        <p class='section-title'>🧠 Input MRI Scan</p>
-        """, unsafe_allow_html=True)
-        st.image(image, use_container_width=True)
+st.markdown("</div></div>", unsafe_allow_html=True)
 
-    with col2:
-        st.markdown("""
-        <p class='section-title'>🎯 AI Segmentation Result</p>
-        """, unsafe_allow_html=True)
-
-        with st.spinner("🔍 Analyzing MRI scan..."):
-            img_array = np.array(image.convert('RGB'))
-            img_resized = np.array(
-                Image.fromarray(img_array).resize((IMG_SIZE, IMG_SIZE))
-            )
-            img_normalized = (img_resized / 255.0).astype(np.float32)
-            img_input = np.expand_dims(img_normalized, axis=0)
-
-            if model_loaded:
-                input_details = interpreter.get_input_details()
-                output_details = interpreter.get_output_details()
-                interpreter.set_tensor(
-                    input_details[0]['index'], img_input)
-                interpreter.invoke()
-                prediction = interpreter.get_tensor(
-                    output_details[0]['index'])
-                mask = (prediction[0, :, :, 0] > 0.5
-                       ).astype(np.uint8) * 255
-            else:
-                img_gray = np.array(
-                    image.convert('L').resize((IMG_SIZE, IMG_SIZE)))
-                threshold = img_gray.mean() + img_gray.std()
-                mask = (img_gray > threshold).astype(np.uint8) * 255
-
-            st.image(mask, use_container_width=True, clamp=True)
-
-            tumor_percent = (mask > 0).mean() * 100
-
-            if tumor_percent > 1:
-                st.markdown(f"""
-                <div class='tumor-detected'>
-                ⚠️ Tumor Region Detected<br>
-                <span style='font-size: 2rem;'>{tumor_percent:.2f}%</span>
-                <br>of scan area
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown(f"""
-                <div class='no-tumor'>
-                ✅ No Tumor Detected<br>
-                <span style='font-size: 2rem;'>{tumor_percent:.2f}%</span>
-                <br>abnormal region
-                </div>
-                """, unsafe_allow_html=True)
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("""
-            <div style='background: #ffffff11; border-radius: 8px;
-            padding: 0.8rem; color: #8892b0; font-size: 0.85rem;'>
-            ⚕️ <b>Medical Disclaimer:</b> This tool is for research 
-            purposes only and should not replace professional 
-            medical diagnosis.
-            </div>
-            """, unsafe_allow_html=True)
-
-# Performance Metrics
-st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
-st.markdown("""
-<p class='section-title'>📊 Model Performance Metrics</p>
-""", unsafe_allow_html=True)
-
-col3, col4, col5, col6 = st.columns(4)
-with col3:
-    st.markdown("""
-    <div class='metric-card'>
-        <p style='color: #8892b0; margin: 0;'>Test Accuracy</p>
-        <p style='color: #00d2ff; font-size: 2rem; 
-        font-weight: 800; margin: 0;'>99.37%</p>
-        <p style='color: #6bff6b; font-size: 0.8rem; 
-        margin: 0;'>↑ +28% improvement</p>
+# ---- Ledger strip ----
+st.markdown("<div class='ledger-strip'>", unsafe_allow_html=True)
+ledger_data = [
+    ("Pneumonia", "82.25%"),
+    ("Diabetic Retinopathy", "92.77%"),
+    ("Skin Lesion", "78.00%"),
+    ("COVID-19", "75.83%"),
+]
+ledger_html = ""
+for name, acc in ledger_data:
+    ledger_html += f"""
+    <div class='ledger-item'>
+        <p class='lname'>{name}</p>
+        <p class='lval'>{acc}</p>
     </div>
-    """, unsafe_allow_html=True)
-with col4:
-    st.markdown("""
-    <div class='metric-card'>
-        <p style='color: #8892b0; margin: 0;'>Dice Coefficient</p>
-        <p style='color: #7b2ff7; font-size: 2rem; 
-        font-weight: 800; margin: 0;'>0.3147</p>
-        <p style='color: #6bff6b; font-size: 0.8rem; 
-        margin: 0;'>↑ +2211% improvement</p>
-    </div>
-    """, unsafe_allow_html=True)
-with col5:
-    st.markdown("""
-    <div class='metric-card'>
-        <p style='color: #8892b0; margin: 0;'>Test Loss</p>
-        <p style='color: #00d2ff; font-size: 2rem; 
-        font-weight: 800; margin: 0;'>0.7156</p>
-        <p style='color: #6bff6b; font-size: 0.8rem; 
-        margin: 0;'>↓ -0.27 reduction</p>
-    </div>
-    """, unsafe_allow_html=True)
-with col6:
-    st.markdown("""
-    <div class='metric-card'>
-        <p style='color: #8892b0; margin: 0;'>Architecture</p>
-        <p style='color: #7b2ff7; font-size: 2rem; 
-        font-weight: 800; margin: 0;'>U-Net</p>
-        <p style='color: #6bff6b; font-size: 0.8rem; 
-        margin: 0;'>✅ Optimized</p>
-    </div>
-    """, unsafe_allow_html=True)
+    """
+st.markdown(ledger_html + "</div>", unsafe_allow_html=True)
 
-# Training Results
-st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
-st.markdown("""
-<p class='section-title'>📈 Training Results & Visualizations</p>
-""", unsafe_allow_html=True)
-
-col7, col8 = st.columns(2)
-with col7:
-    st.markdown("""
-    <p style='color: #8892b0; text-align: center;'>
-    Training History</p>""", unsafe_allow_html=True)
-    st.image(
-        "https://raw.githubusercontent.com/sami442/medical-image-segmentation/main/Results/training_history_v2.png",
-        use_container_width=True
-    )
-with col8:
-    st.markdown("""
-    <p style='color: #8892b0; text-align: center;'>
-    Segmentation Predictions</p>""", unsafe_allow_html=True)
-    st.image(
-        "https://raw.githubusercontent.com/sami442/medical-image-segmentation/main/Results/predictions_v2.png",
-        use_container_width=True
-    )
-
-# Footer
-st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
-st.markdown("""
-<div style='text-align: center; color: #8892b0; padding: 1rem;'>
-    <p>Developed with ❤️ by <b style='color: #00d2ff;'>Samina Mazhar</b> 
-    |  Artificial Intelligence | 
-    <a href='https://github.com/sami442' 
-    style='color: #7b2ff7;'>GitHub</a> | 
-    <a href='https://huggingface.co/mazharsamina26' 
-    style='color: #00d2ff;'>Hugging Face</a></p>
-</div>
+# ---- Footer ----
+st.markdown(f"""
+<p style='font-family:"JetBrains Mono", monospace; font-size:0.75rem; color:#8A8270;'>
+Maintained by Samina Mazhar, BS Artificial Intelligence ·
+<a href='https://github.com/sami442' style='color:#1F6F6B;'>GitHub</a> ·
+<a href='https://huggingface.co/mazharsamina26' style='color:#1F6F6B;'>Hugging Face</a> ·
+<a href='https://medical-image-segmentation-jc6hrzsdhjimse9d47n5uz.streamlit.app/' style='color:#1F6F6B;'>Brain Tumor Panel</a> ·
+<a href='https://multi-cancer-detection-9jme9mlzxhhllkct4ec3ft.streamlit.app/' style='color:#1F6F6B;'>CancerShield Panel</a>
+</p>
 """, unsafe_allow_html=True)

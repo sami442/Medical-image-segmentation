@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Palette: canvas #14110F, teal #1F6F6B, terracotta #C9603C, sand #E8DFCB, ink #14110F
+# Palette: canvas #14110F, teal #1F6F6B, terracotta #C9603C, sand #E8DFCB
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
@@ -22,6 +22,7 @@ st.markdown("""
     .masthead {
         display: flex; align-items: flex-end; justify-content: space-between;
         border-bottom: 1px solid #3A352C; padding-bottom: 1.2rem; margin-bottom: 2rem;
+        flex-wrap: wrap; gap: 0.5rem;
     }
     .masthead h1 {
         font-family: 'Fraunces', serif; font-weight: 700; font-size: 2.6rem;
@@ -32,8 +33,7 @@ st.markdown("""
         color: #C9603C; text-transform: uppercase; letter-spacing: 0.12em;
     }
 
-    /* Vertical numbered timeline instead of card grid */
-    .step-row { display: flex; gap: 1.4rem; margin-bottom: 2.2rem; }
+    .step-row { display: flex; gap: 1.4rem; margin-bottom: 1.2rem; }
     .step-num {
         font-family: 'Fraunces', serif; font-size: 2.4rem; font-weight: 700;
         color: #3A352C; line-height: 1; min-width: 3rem;
@@ -80,10 +80,10 @@ st.markdown("""
     }
 
     .ledger-strip {
-        display: flex; border-top: 1px solid #3A352C; border-bottom: 1px solid #3A352C;
-        margin: 2.5rem 0; padding: 1.2rem 0;
+        display: flex; flex-wrap: wrap; border-top: 1px solid #3A352C;
+        border-bottom: 1px solid #3A352C; margin: 2.5rem 0; padding: 1.2rem 0;
     }
-    .ledger-item { flex: 1; padding: 0 1.2rem; border-left: 1px solid #3A352C; }
+    .ledger-item { flex: 1; min-width: 150px; padding: 0 1.2rem; border-left: 1px solid #3A352C; }
     .ledger-item:first-child { border-left: none; }
     .ledger-item .lname {
         font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
@@ -106,7 +106,7 @@ st.markdown("""
         background: #1B1815 !important; border-color: #3A352C !important;
     }
 
-    footer, [data-testid="stToolbar"] { visibility: hidden; }
+    footer, [data-testid="stToolbar"], #MainMenu { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -298,14 +298,13 @@ else:
 st.markdown("</div></div>", unsafe_allow_html=True)
 
 # ---- Ledger strip ----
-st.markdown("<div class='ledger-strip'>", unsafe_allow_html=True)
 ledger_data = [
     ("Pneumonia", "82.25%"),
     ("Diabetic Retinopathy", "92.77%"),
     ("Skin Lesion", "78.00%"),
     ("COVID-19", "75.83%"),
 ]
-ledger_html = ""
+ledger_html = "<div class='ledger-strip'>"
 for name, acc in ledger_data:
     ledger_html += f"""
     <div class='ledger-item'>
@@ -313,10 +312,11 @@ for name, acc in ledger_data:
         <p class='lval'>{acc}</p>
     </div>
     """
-st.markdown(ledger_html + "</div>", unsafe_allow_html=True)
+ledger_html += "</div>"
+st.markdown(ledger_html, unsafe_allow_html=True)
 
 # ---- Footer ----
-st.markdown(f"""
+st.markdown("""
 <p style='font-family:"JetBrains Mono", monospace; font-size:0.75rem; color:#8A8270;'>
 Maintained by Samina Mazhar, BS Artificial Intelligence ·
 <a href='https://github.com/sami442' style='color:#1F6F6B;'>GitHub</a> ·
